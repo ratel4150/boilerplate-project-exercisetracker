@@ -1,0 +1,12 @@
+db.User.aggregate([
+    { $match: 
+    
+    { _id: ObjectId('63aa03a2c02c71a8716bad6e') } },
+    {$lookup: 
+    {
+     from: "Excercise", 
+     localField: "_id", 
+     foreignField: "user_id", 
+     as: "UserExcersice"
+    }
+}])
