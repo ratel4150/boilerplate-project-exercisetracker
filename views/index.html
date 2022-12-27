@@ -13,10 +13,13 @@
       <form action="/api/users" method="post">
         <h3>Create a New User</h3>
         <p><code>POST /api/users</code></p>
-        <input id="uname" type="text" name="username" placeholder="username" />
+        <input id="username" type="text" name="username" placeholder="username" />
         <input type="submit" value="Submit" />
       </form>
-      <form id="exercise-form" method="post">
+
+
+      
+      <form action="/api/users/:_id/exercise" id="exercise-form" method="post">
         <h3>Add exercises</h3>
         <p><code>POST /api/users/:_id/exercises</code></p>
         <input id="uid" type="text" name=":_id" placeholder=":_id" />
@@ -32,15 +35,15 @@
       <p><strong>[ ]</strong> = optional</p>
       <p><strong>from, to</strong> = dates (yyyy-mm-dd); <strong>limit</strong> = number</p>
     </div>
-    <script>
+  <script>
       const exerciseForm = document.getElementById("exercise-form");
 
       exerciseForm.addEventListener("submit", () => {
         const userId = document.getElementById("uid").value;
-        exerciseForm.action = `/api/users/${userId}/exercises`;
-
+        console.log(userId)
+        exerciseForm.action = `/api/users/${userId}/exercise`;
         exerciseForm.submit();
       });
-    </script>
+    </script> 
   </body>
 </html>
