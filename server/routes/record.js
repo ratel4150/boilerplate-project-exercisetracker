@@ -11,20 +11,126 @@ const dbo = require("../db/conn");
 
 // This section will help you get a list of all the records.
 
-recordRoutes.route("/listings").get(async function (_req, res) {
+recordRoutes.route("/api/users/:id/logs?").get(function (req, res) {
+  const from = new Date(req.query.from);
+  const to = new Date(req.query.to);
+  const limit = Number(req.query.limit);
+  const id = req.params.id;
+  let equalCaracters=req.url.split('').map((caracter)=>{
+    return caracter
+  }).filter((caracter)=>{
+    return caracter==="="
+  })
+
+
+  
+ 
   const dbConnect = dbo.getDb();
-  console.log(dbConnect);
+
   dbConnect
     .collection("User")
-    .find({})
-    .limit(50)
+    .aggregate([
+      { $match: { _id: ObjectId(id) } },
+      {
+        $lookup: {
+          from: "Excercise",
+          localField: "_id",
+          foreignField: "user_id",
+          as: "log",
+        },
+      },
+    ])
     .toArray(function (err, result) {
       if (err) {
         res.status(400).send("Error fetching listings!");
       } else {
-        console.log(dbConnect);
-        console.log(result);
-        res.json(result);
+        if (equalCaracters.length===3) {
+          let arrayResult = [];
+          arrayResult.length = 0;
+          const entries = Object.entries(result[0].log);
+          let dataFiltered = entries
+            .map((data) => {
+              
+              return data;
+            })
+            .filter((data) => {
+              const conditionYear =
+                from.getFullYear() <= data[1].date.getFullYear() &&
+                data[1].date.getFullYear() <= to.getFullYear();
+              const conditionMonth =
+                from.getMonth() <= data[1].date.getMonth() &&
+                data[1].date.getMonth() <= to.getMonth();
+              const conditionDay =
+                from.getDate() <= data[1].date.getDate() &&
+                data[1].date.getDate() <= to.getDate();
+
+              return conditionYear && conditionMonth && conditionDay;
+            });
+          console.log(entries[1]);
+
+          for (let index = 0; index < limit; index++) {
+            const element = dataFiltered[index];
+            console.log(element[1]);
+            delete element[1]._id;
+            delete element[1].user_id;
+            arrayResult.push(element[1]);
+          }
+
+          res.json({
+            _id: result[0]._id,
+            username: result[0].username,
+            from: from,
+            to: to,
+            count: limit,
+            log: arrayResult,
+          });
+       
+          
+        }else if(equalCaracters.length===2){
+          let arrayResult = [];
+          arrayResult.length = 0;
+          const entries = Object.entries(result[0].log);
+          let dataFiltered = entries
+            .map((data) => {
+              return data;
+            })
+            .filter((data) => {
+              const conditionYear =
+                from.getFullYear() <= data[1].date.getFullYear() &&
+                data[1].date.getFullYear() <= to.getFullYear();
+              const conditionMonth =
+                from.getMonth() <= data[1].date.getMonth() &&
+                data[1].date.getMonth() <= to.getMonth();
+              const conditionDay =
+                from.getDate() <= data[1].date.getDate() &&
+                data[1].date.getDate() <= to.getDate();
+
+              return conditionYear && conditionMonth && conditionDay;
+            });
+          console.log(entries[1]);
+
+          for (let index = 0; index < dataFiltered.length; index++) {
+            const element = dataFiltered[index];
+            console.log(element[1]);
+            delete element[1]._id;
+            delete element[1].user_id;
+            element[1].date.toDateString()
+            arrayResult.push(element[1]);
+          }
+
+          res.json({
+            _id: result[0]._id,
+            username: result[0].username,
+            from: from.toDateString(),
+            to: to.toDateString(),
+            count: arrayResult.length,
+            log: arrayResult,
+          });
+       
+
+        }else if(equalCaracters.length===1) {
+          res.json({"www":"ww"})
+        }
       }
     });
 });
@@ -70,27 +176,14 @@ recordRoutes.route("/api/users/:id/exercise").post(function (req, res) {
 
           const entries1 = Object.entries(dataFiltered[0].UserExcersice);
 
-          /*   let id=result[0]["_id"]
-      let username=result[0].username
-      let date=result[0]["UserExcersice"][0].date.toDateString()
-      let duration=result[0]["UserExcersice"][0].duration
-      let description=result[0]["UserExcersice"][0].description */
-
-          /*   res.json({"_id":id,
-      "username":username,
-      "date":date,
-      "duration":duration,
-      "description":description
-    
-    
-    }) */ console.log(dataFiltered._id);
+          console.log(dataFiltered._id);
 
           res.json({
             _id: dataFiltered[0]._id,
             username: dataFiltered[0].username,
             date: entries1[entries1.length - 1][1].date.toDateString(),
-            duration:entries1[entries1.length - 1][1].duration,
-            description:entries1[entries1.length - 1][1].description
+            duration: entries1[entries1.length - 1][1].duration,
+            description: entries1[entries1.length - 1][1].description,
           });
         }
       });
@@ -125,18 +218,6 @@ recordRoutes.route("/api/users").post(function (req, res) {
       });
     /* res.status(204).send(); */
   });
-
-  /* dbConnect
-    .collection('User')
-    .insertOne(matchDocument, function (err, result) {
-      console.log(result)
-     if (err) {
-        res.status(400).send('Error inserting matches!');
-      } else {  
-        console.log(`Added a new match with id ${result}`);
-        res.status(204).send();
-       } 
-    }); */
 });
 
 // This section will help you update a record by id.
